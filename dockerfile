@@ -20,7 +20,7 @@ WORKDIR /app
 RUN pip3 install -r requirements.txt
 
 # expõe a porta do MQTT broker
-EXPOSE 1883
+EXPOSE 1884
 
 # define o comando que será executado ao iniciar o container
 CMD ["python3", "posto.py"]
