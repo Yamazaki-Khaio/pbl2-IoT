@@ -1,18 +1,38 @@
-from flask import Flask, jsonify
-import paho.mqtt.client as mqtt
-import requests
+from mqtt import Conectar_mqtt
+from struct import unpack
+import uuid
+import random
+class Servidor:
+ 
+    def __init__(self):
+            
+            self.tipo = 'servidor'
+            self.postos = []
+            self.regiao = random.randint(0,0)
+            self.client_id =  f"{self.tipo}--{str(uuid.uuid4())}"
+            conectar = Conectar_mqtt
+            self.client = conectar.connect_mqtt(self, self.regiao, self.client_id)
+    
+    def on_connect(client, data, rc):
+        print("entrou")
+        client.subscribe([('solicitar/menor_fila',0)])
 
-app = Flask(__name__)
+    def on_message(client, userdata, msg):
 
-# Configuração da conexão MQTT
-mqtt_broker_address = "mqtt.example.com"
-mqtt_broker_port = 1883
-mqtt_client = mqtt.Client("car-computing")
-try:
-    mqtt_client.connect(mqtt_broker_address, mqtt_broker_port)
-except ConnectionRefusedError as e:
-    print(f"Erro ao se conectar ao broker MQTT: {e}")
+        v = unpack(">H",msg.payload)[0]
+        print(msg.topic + "/" + str(v))
+    
+    def retornar_requisicao():
+          pass
+    
+    def cadastrar_posto():
+          pass
+    
+    def atualizar_fila_posto():
+          pass
+    
+    def aguardando(self):
+          self.client.connect_callback
 
-# Configuração da conexão API REST
-api_url = "http://api.example.com/gas-stations"
-api_token = "my_api_token"
+if __name__ == '__main__':
+    S1 = Servidor()
