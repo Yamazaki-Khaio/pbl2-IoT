@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+  posto-recarga-1:
+    image: posto-recarga
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - POSTO_ID=1
+      - POSTO_LATITUDE=...
+      - POSTO_LONGITUDE=...
+      - POSTO_CAPACIDADE=...
+    networks:
+      - posto-net
+
+  posto-recarga-2:
+    image: posto-recarga
+    build:
+      context: .
+      dockerfile: Dockerfile-post-mq
+    environment:
+      - POSTO_ID=2
+      - POSTO_LATITUDE=...
+      - POSTO_LONGITUDE=...
+      - POSTO_CAPACIDADE=...
+    networks:
+      - posto-net
+
+networks:
+  posto-net:
