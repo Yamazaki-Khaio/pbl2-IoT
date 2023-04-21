@@ -1,14 +1,13 @@
 import paho.mqtt.client as mqtt
+import json
 import time
-import random
 
-class CarroEletrico:
-
-    def __init__(self, id, latitude, longitude):
+class Carro:
+    def __init__(self, id, posto_recarga_id):
         self.id = id
-        self.latitude = latitude
-        self.longitude = longitude
-        self.carga_atual = 0
+        self.posto_recarga_id = posto_recarga_id
+
+        # Cria um cliente MQTT e configura as funções de callback
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.connect("localhost", 1883, 60)
@@ -16,27 +15,22 @@ class CarroEletrico:
 
     def on_connect(self, client, userdata, flags, rc):
         print("Conectado com sucesso no broker MQTT.")
-        client.subscribe("carro-eletrico/" + str(self.id) + "/status")
+        # Subscreve ao tópico da fila do posto de recarga
+        client.subscribe("posto-recarga/{}/fila".format(self.posto_recarga_id))
 
-    def enviar_status(self):
-        status = {
-            "id": self.id,
-            "latitude": self.latitude,
-            "longitude": self.longitude,
-            "carga_atual": self.carga_atual
-        }
+    def solicitar_recarga(self):
+        # Publica uma mensagem no tópico do posto de recarga
+        payload = {"carro_id": self.id}
+        self.client.publish("posto-recarga/{}/solicitar-recarga".format(self.posto_recarga_id), json.dumps(payload.encode("utf-8")), qos=1)
 
-        self.client.publish("carro-eletrico/" + str(self.id) + "/status", str(status))
-        print("Enviando status do carro elétrico " + str(self.id) + ": " + str(status))
+    def on_message(self, client, userdata, msg):
+        topic = msg.topic.split("/")
+        if len(topic) == 3 and topic[2] == "fila":
+            # Recebe a mensagem com a fila atualizada
+            payload = json.loads(msg.payload.decode("utf-8"))
+            num_carros = payload["num_carros"]
+            print("Carro {} está na posição {} da fila do posto de recarga {}.".format(self.id, num_carros, self.posto_recarga_id))
 
-    def descarregar_bateria(self):
-        descarga = random.choice(["lenta", "rápida", "média"])
-        if descarga == "lenta":
-            carga_perdida = random.randint(1, 5)
-        elif descarga == "rápida":
-            carga_perdida = random.randint(6, 10)
-        else:
-            carga_perdida = random.randint(11, 15)
-
-        self.carga_atual -= carga_perdida
-        print("Descarregando bateria do carro elétrico " + str(self.id) + " em " + str(carga_perdida) + " unidades.")
+    def desconectar(self):
+        self.client.loop_stop()
+        self.client.disconnect()

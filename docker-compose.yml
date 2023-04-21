@@ -1,31 +1,54 @@
 version: "3"
-
 services:
+  broker:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto.log:/mosquitto/log/mosquitto.log
+      - mosquitto.conf:/mosquitto/data/mosquitto.conf
+
   posto-recarga-1:
-    image: posto-recarga
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
+    command: python posto.py 1
+    ports:
+      - "5001:5000"
+    depends_on:
+      - broker
     environment:
-      - POSTO_ID=1
-      - POSTO_LATITUDE=...
-      - POSTO_LONGITUDE=...
-      - POSTO_CAPACIDADE=...
-    networks:
-      - posto-net
+      - BROKER_HOST=broker
 
   posto-recarga-2:
-    image: posto-recarga
-    build:
-      context: .
-      dockerfile: Dockerfile-post-mq
+    build: .
+    command: python posto.py 2
+    ports:
+      - "5002:5000"
+    depends_on:
+      - broker
     environment:
-      - POSTO_ID=2
-      - POSTO_LATITUDE=...
-      - POSTO_LONGITUDE=...
-      - POSTO_CAPACIDADE=...
-    networks:
-      - posto-net
+      - BROKER_HOST=broker
 
-networks:
-  posto-net:
+  carro-1:
+    build: .
+    command: python carro.py 1 1
+    depends_on:
+      - broker
+      - posto-recarga-1
+      - posto-recarga-2
+    environment:
+      - BROKER_HOST=broker
+
+  carro-2:
+    build: .
+    command: python carro.py 2 2
+    depends_on:
+      - broker
+      - posto-recarga-1
+      - posto-recarga-2
+    environment:
+      - BROKER_HOST=broker
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
