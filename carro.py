@@ -1,36 +1,63 @@
-import paho.mqtt.client as mqtt
-import json
+import random
 import time
+import json
+import paho.mqtt.client as mqtt
 
-class Carro:
-    def __init__(self, id, posto_recarga_id):
-        self.id = id
-        self.posto_recarga_id = posto_recarga_id
+# Define as configurações do MQTT
+broker_address = "localhost"
+client_id = "carro01"
+topic = "carro/01"
+qos = 1
+retain = False
 
-        # Cria um cliente MQTT e configura as funções de callback
-        self.client = mqtt.Client()
-        self.client.on_connect = self.on_connect
-        self.client.connect("localhost", 1883, 60)
-        self.client.loop_start()
+# Função de callback para o evento de conexão ao broker MQTT
+def on_connect(client, userdata, flags, rc):
+    print("Conectado ao broker MQTT com sucesso. Código de retorno: " + str(rc))
 
-    def on_connect(self, client, userdata, flags, rc):
-        print("Conectado com sucesso no broker MQTT.")
-        # Subscreve ao tópico da fila do posto de recarga
-        client.subscribe("posto-recarga/{}/fila".format(self.posto_recarga_id))
+# Função de callback para o evento de envio de mensagem
+def on_publish(client, userdata, mid):
+    print("Mensagem enviada com sucesso. ID: " + str(mid))
 
-    def solicitar_recarga(self):
-        # Publica uma mensagem no tópico do posto de recarga
-        payload = {"carro_id": self.id}
-        self.client.publish("posto-recarga/{}/solicitar-recarga".format(self.posto_recarga_id), json.dumps(payload.encode("utf-8")), qos=1)
+# Configura o cliente MQTT
+client = mqtt.Client(client_id)
 
-    def on_message(self, client, userdata, msg):
-        topic = msg.topic.split("/")
-        if len(topic) == 3 and topic[2] == "fila":
-            # Recebe a mensagem com a fila atualizada
-            payload = json.loads(msg.payload.decode("utf-8"))
-            num_carros = payload["num_carros"]
-            print("Carro {} está na posição {} da fila do posto de recarga {}.".format(self.id, num_carros, self.posto_recarga_id))
+# Configura as funções de callback
+client.on_connect = on_connect
+client.on_publish = on_publish
 
-    def desconectar(self):
-        self.client.loop_stop()
-        self.client.disconnect()
+# Conecta ao broker MQTT
+client.connect(broker_address)
+
+# Loop principal do programa
+while True:
+    # Gera um valor aleatório de descarga de bateria
+    descarga = random.uniform(0, 1)
+
+    # Define a tendência da descarga da bateria
+    if descarga < 0.3:
+        tendencia = "rápida"
+    elif descarga < 0.6:
+        tendencia = "média"
+    else:
+        tendencia = "lenta"
+
+    # Cria um dicionário com os dados da bateria
+    dados = {
+        "descarga": descarga,
+        "tendencia": tendencia
+    }
+
+    # Converte o dicionário para JSON
+    payload = json.dumps(dados, ensure_ascii=False).encode('utf-8')
+
+    # Envia os dados para o broker MQTT
+    result, mid = client.publish(topic, payload, qos=qos, retain=retain)
+
+    # Verifica se o envio foi bem-sucedido
+    if result == mqtt.MQTT_ERR_SUCCESS:
+        print("Dados enviados com sucesso. Tópico: " + topic + ", Payload: " + payload.decode('utf-8'))
+    else:
+        print("Erro ao enviar dados. Código de retorno: " + str(result))
+
+    # Espera por um intervalo de tempo
+    time.sleep(5)
