@@ -1,6 +1,9 @@
 # REPOSITORIO DESTINADO AO PROBLEMA 2 DA DISCIPLINA MI - Concorrência e Conectividade - 2023.1
 
 
+# Organização das pastas
+A solução está organizada duas pastas(pythonProject/models) e três arquivos executavéis, com o Diagrama de Sequência básico da arquitetura, executaveis python do servidor, medidor e usuarioe tambem contém dois arquivos dockerfiles para criação da imagem do Servidor e Medidor. Na pasta models está presente todos os modelos necessários para executar a solução, sendo dois executáveis via PYTHON, sendo eles: o cliente "medidor.py", usuario "usuario.py" e o servidor "servidor.py", .
+
 # RELATÓRIO
 
 Este relatório descreve o funcionamento de um sistema de gerenciamento de carga para carros elétricos que utiliza a arquitetura de computação em névoa (fog computing). O código foi desenvolvido em Python e utiliza a biblioteca Paho MQTT para a comunicação entre os diferentes nós do sistema.
