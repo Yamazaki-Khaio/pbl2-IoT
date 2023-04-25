@@ -1,54 +1,60 @@
 version: "3"
+
 services:
-  broker:
-    image: eclipse-mosquitto:2
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
     ports:
       - "1883:1883"
-    volumes:
-      - mosquitto_data:/mosquitto/data
-      - mosquitto.log:/mosquitto/log/mosquitto.log
-      - mosquitto.conf:/mosquitto/data/mosquitto.conf
 
-  posto-recarga-1:
-    build: .
-    command: python posto.py 1
+  fog_node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fog_node
+    environment:
+      - MQTT_BROKER_ADDRESS=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - MQTT_TOPIC=dadosfog
+    depends_on:
+      - mosquitto
+
+  edge_node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: edge_node
+    environment:
+      - MQTT_BROKER_ADDRESS=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - MQTT_TOPIC=dadosedge
+    depends_on:
+      - mosquitto
+
+  carro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: carro
+    environment:
+      - MQTT_BROKER_ADDRESS=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - MQTT_TOPIC=dadoscarros
+      - FLASK_APP=computador_bordo.py
+      - FLASK_RUN_HOST=0.0.0.0
     ports:
-      - "5001:5000"
+      - "5000:5000"
     depends_on:
-      - broker
-    environment:
-      - BROKER_HOST=broker
+      - mosquitto
 
-  posto-recarga-2:
-    build: .
-    command: python posto.py 2
-    ports:
-      - "5002:5000"
+  publicador:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: publicador
+    environment:
+      - MQTT_BROKER_ADDRESS=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - MQTT_TOPIC=dadoscarros
     depends_on:
-      - broker
-    environment:
-      - BROKER_HOST=broker
-
-  carro-1:
-    build: .
-    command: python carro.py 1 1
-    depends_on:
-      - broker
-      - posto-recarga-1
-      - posto-recarga-2
-    environment:
-      - BROKER_HOST=broker
-
-  carro-2:
-    build: .
-    command: python carro.py 2 2
-    depends_on:
-      - broker
-      - posto-recarga-1
-      - posto-recarga-2
-    environment:
-      - BROKER_HOST=broker
-
-volumes:
-  mosquitto_data:
-  mosquitto_log:
+      - mosquitto

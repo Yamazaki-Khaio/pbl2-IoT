@@ -1,89 +1,108 @@
 import paho.mqtt.client as mqtt
 import json
+import random
+import time
 import threading
-
-from flask import Flask, jsonify
-
-postos = []
+# Configurações do MQTT broker
 broker_address = "localhost"
 broker_port = 1883
-broker_topic_carros = "dadoscarros"
-broker_topic_postos = "dadospontos"
+broker_topic = "dadoscarros"
+broker_topic_posto = "dadospontos"
 
-posto_menor_fila = None
-client = mqtt.Client()
-app = Flask(__name__)
+# Configurações do fog node
+fog_ip = "localhost"
+fog_port = 1883
+fog_topic = "dadosfog"
 
-def processar_dados_posto(payload):
-    global postos, menor_fila_posto
-    dados = json.loads(payload)
-    posto_id = dados["id"]
-    menor_fila = None
-    for i, posto in enumerate(postos):
-        if posto["id"] == posto_id:
-            postos[i] = dados  # atualizar os dados do posto na lista
-        if menor_fila is None or posto["fila"] < menor_fila["fila"]:
-            menor_fila = posto
-    if menor_fila is None or dados["fila"] < menor_fila["fila"]:
-        menor_fila = dados
-    postos.append(dados)  # adicionar novos dados do posto à lista
-    menor_fila_posto = menor_fila  # atualizar o valor da menor fila do posto
 
-def processar_dados_carro(payload):
-    if isinstance(payload, bytes):
-        payload = payload.decode('utf-8')
-    dados = json.loads(payload)
-    if dados["bateria"] < 20 and dados["descarga"] == "lenta":
-        print("Enviar alerta para o motorista")
-        # Aqui você pode adicionar o código para enviar uma mensagem MQTT ao motorista
-    else:
-        print("Dados do carro recebidos com sucesso")
+# Configurações do edge node
+edge_ip = "localhost"
+edge_port = 1883
+edge_topic = "dadosedge"
 
-        # Se a bateria estiver baixa, obter a localização do posto com menor fila
-        if dados["bateria"] < 30:
-            global posto_menor_fila
-            if posto_menor_fila is not None:
-                endereco_posto_menor_fila = posto_menor_fila["endereco"]
-                print(f"O posto com menor fila é {posto_menor_fila['nome']}")
-                dados["endereco_posto_menor_fila"] = endereco_posto_menor_fila
-                # Publicar os dados atualizados do carro no broker MQTT
-                client.publish(broker_topic_postos, payload.encode("utf-8"), qos=0)
+# Variáveis para controle da carga de processamento dos nós
+fog_load = 0
+edge_load = 0
+fog_capacity = 10
+edge_capacity = 5
 
+# Função que processa os dados dos carros e publica no tópico do fog node
+def process_car_data(client, userdata, message):
+    try:
+        payload = message.payload.decode("utf-8")
+        dados = json.loads(payload)
+        descarga = dados["descarga"]
+
+        if descarga == "rápida":
+            tempo = random.randint(2, 5)
+        else:
+            tempo = random.randint(1, 3)
+
+        dados["tempo_carregamento"] = tempo
+        print(f"Dados do carro processados: {dados}")
+        client.publish(fog_topic, json.dumps(dados).encode("utf-8"), qos=1, retain=True)
+
+        global fog_load
+        fog_load += 1
+    except Exception as e:
+        print(f"Erro no processamento de dados do carro: {e}")
+
+
+
+
+
+# Função que processa os dados dos postos de recarga e publica no tópico do edge node
+def process_posto_data(client, userdata, message):
+        try:
+            payload = message.payload.decode("utf-8")
+            dados = json.loads(payload)
+            capacidade = dados["capacidade"]
+            fila = dados["fila"]
+
+            if fila > capacidade / 2:
+                tempo = random.randint(5, 10)
             else:
-                print("Não há postos disponíveis no momento")
+                tempo = random.randint(2, 5)
+
+            dados["tempo_espera"] = tempo
+            print(f"Dados do posto de recarga processados: {dados}")
+            client.publish(edge_topic, json.dumps(dados).encode("utf-8"), qos=0, retain=True)
+
+            global edge_load
+            edge_load += 1
+        except Exception as e:
+            print(f"Erro no processamento de dados do carro: {e}")
+
+# Configuração do cliente MQTT e inscrição nos tópicos
 
 
+client = mqtt.Client()
 
+
+client.connect(broker_address, broker_port)
+client.subscribe(broker_topic, qos=0)
+client.subscribe(broker_topic_posto, qos=0)
+
+# Thread para receber mensagens do broker e chamar as funções de processamento de dados
 def on_message(client, userdata, message):
-    global postos, posto_menor_fila
-    if message.topic == broker_topic_postos:
-        payload_p = message.payload.decode("utf-8")
-        processar_dados_posto(payload_p)
-
-        print(f"Recebido o seguinte {payload_p} do tópico {message.topic}:")
-    elif message.topic == broker_topic_carros:
-        payload_c = message.payload.decode("utf-8")
-        processar_dados_carro(payload_c)
-        print(f"Recebido o seguinte {payload_c} do tópico {message.topic}:")
+    if message.topic == broker_topic:
+        process_car_data(client, userdata, message)
+    elif message.topic == broker_topic_posto:
+        process_posto_data(client, userdata, message)
 
 client.on_message = on_message
-client.connect(broker_address, broker_port)
-client.subscribe(broker_topic_carros, qos=0)
-client.subscribe(broker_topic_postos, qos=0)
+def mqtt_loop():
+    while True:
+        try:
+            client.loop_forever()
+        except Exception as e:
+            print(f"Erro ao conectar ao broker: {e}")
+            time.sleep(5)
 
-def start_mqtt_loop():
-    client.loop_start()
-mqtt_thread = threading.Thread(target=start_mqtt_loop)
+mqtt_thread = threading.Thread(target=mqtt_loop)
 mqtt_thread.start()
 
 
-
-@app.route('/postos/menor-fila')
-def get_posto_menor_fila():
-    global menor_fila_posto
-    if menor_fila_posto is None:
-        return jsonify({"message": "Não há postos disponíveis no momento"})
-    return jsonify(menor_fila_posto)
-
-if __name__ == '__main__':
-    app.run()
+# Loop principal para gerar e publicar dados
+while True:
+    time.sleep(5)

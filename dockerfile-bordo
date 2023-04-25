@@ -9,10 +9,8 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Cópia do código-fonte da aplicação
-COPY publish_mqtt.py .
-
-# Defina a variável de ambiente para o endereço do broker MQTT
-ENV BROKER_ADDRESS=localhost
+COPY computador_bordo.py .
+EXPOSE 5000
 
 # Comando padrão para execução do container
-CMD ["python", "publish_mqtt.py"]
+CMD ["python", "computador_bordo.py"]
