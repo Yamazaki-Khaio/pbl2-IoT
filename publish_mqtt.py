@@ -7,7 +7,7 @@ import time
 
 # Configurações do MQTT broker
 broker_address = "172.16.103.13"
-broker_port = 1883
+broker_port = 2003
 broker_topic = "dadoscarros"
 broker_topic_posto = "dadospontos"
 
