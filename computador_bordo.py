@@ -119,4 +119,4 @@ def menu_principal():
 if __name__ == "__main__":
     thread_menu = threading.Thread(target=menu_principal)
     thread_menu.start()
-    app.run()
+    app.run(port=2004, host='0.0.0.0', debug=True, threaded=True )
