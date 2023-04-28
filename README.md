@@ -1,12 +1,25 @@
-# REPOSITORIO DESTINADO AO PROBLEMA 2 DA DISCIPLINA MI - Concorrência e Conectividade - 2023.1
+# Sistema de gerenciamento a carga de carros elétricos em uma rede de postos de recarga utilizando a arquitetura de fog e edge computing - padrão publish/subscribe
+REPOSITORIO DESTINADO AO PROBLEMA 2 DA DISCIPLINA MI - Concorrência e Conectividade - 2023.1
+
+# Diagrama sequencial
+![Diagrama sequencial](https://github.com/Yamazaki-Khaio/pbl2-IoT/blob/khaio/Diagram%20Sequencial.png)
+
+# Requisitos 
+PYTHON ou DOCKER
+
+# 
+
+# Docker
+1. Repoitorio no dockerhub: https://hub.docker.com/repository/docker/khaiioy/pbl2/general
+2. A imagem docker pode ser criada diretamente pelo dockerfile
 
 
 # Organização das pastas
-A solução está organizada em 3 três arquivos executavéis, com o Diagrama de Sequência básico da arquitetura, executaveis python do servidor, medidor e usuarioe tambem contém dois arquivos dockerfiles para criação da imagem do Servidor e Medidor. Na pasta models está presente todos os modelos necessários para executar a solução, sendo dois executáveis via PYTHON, sendo eles: o cliente "medidor.py", usuario "usuario.py" e o servidor "servidor.py", .
+A solução está organizada em 3 três arquivos executavéis, com o Diagrama de Sequência básico da arquitetura, sendo três executáveis via PYTHON, sendo eles: "servidor_mqtt.py", "publish_mqtt.py" e "computador_bordo.py".
 
 # RELATÓRIO
 
-Este relatório descreve o funcionamento de um sistema de gerenciamento de carga para carros elétricos que utiliza a arquitetura de computação em névoa (fog computing). O código foi desenvolvido em Python e utiliza a biblioteca Paho MQTT para a comunicação entre os diferentes nós do sistema.
+Este relatório descreve o funcionamento de um sistema de gerenciamento de carga para carros elétricos que utiliza a arquitetura de computação em névoa (fog computing) e borda (edge computing) . O código foi desenvolvido em Python e utiliza a biblioteca Paho MQTT para a comunicação entre os diferentes nós do sistema.
 
 O sistema é composto por três nós: o MQTT Broker, o fog node e o edge node. O MQTT Broker é responsável por receber as mensagens dos sensores instalados nos carros elétricos e nos postos de recarga e encaminhá-las para os nós adequados. O fog node é responsável por processar as mensagens dos carros elétricos e o edge node é responsável por processar as mensagens dos postos de recarga.
 
