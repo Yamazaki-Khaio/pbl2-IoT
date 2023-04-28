@@ -140,7 +140,7 @@ def handle_car_data(client, userdata, message):
 # Função que lida com os dados dos postos de combustível recebidos do broker
 def handle_posto_data(client, userdata, message):
     payload = message.payload.decode("utf-8")
-    print(f"Dados do posto de combustível recebidos: {payloada}")
+    print(f"Dados do posto de recarga recebidos: {payload}")
 
 
 # Callback para receber mensagens do broker e chamar as funções de tratamento de dados
