@@ -2,7 +2,7 @@
 
 
 # Organização das pastas
-A solução está organizada duas pastas(pythonProject/models) e três arquivos executavéis, com o Diagrama de Sequência básico da arquitetura, executaveis python do servidor, medidor e usuarioe tambem contém dois arquivos dockerfiles para criação da imagem do Servidor e Medidor. Na pasta models está presente todos os modelos necessários para executar a solução, sendo dois executáveis via PYTHON, sendo eles: o cliente "medidor.py", usuario "usuario.py" e o servidor "servidor.py", .
+A solução está organizada em 3 três arquivos executavéis, com o Diagrama de Sequência básico da arquitetura, executaveis python do servidor, medidor e usuarioe tambem contém dois arquivos dockerfiles para criação da imagem do Servidor e Medidor. Na pasta models está presente todos os modelos necessários para executar a solução, sendo dois executáveis via PYTHON, sendo eles: o cliente "medidor.py", usuario "usuario.py" e o servidor "servidor.py", .
 
 # RELATÓRIO
 
@@ -22,12 +22,14 @@ Em resumo, o sistema implementado é capaz de gerenciar a carga de carros elétr
 
 # FUNCIONAMENTO
 
-Este código é um exemplo de simulação de comunicação entre dispositivos IoT (Internet das Coisas) utilizando o protocolo MQTT (Message Queuing Telemetry Transport).
+O código implementa uma solução de IoT para gerenciamento de carregamento de veículos elétricos em uma infraestrutura de computação em névoa (fog computing) e borda (edge computing). O objetivo é balancear a carga de processamento entre os nós de computação para melhorar o desempenho e a eficiência do sistema.
 
-Inicialmente, as configurações dos brokers, tópicos, nós fog e edge são definidas. As variáveis para controle da carga de processamento dos nós também são inicializadas. Em seguida, são definidas duas funções que processam dados: a primeira processa dados de carros elétricos e publica no tópico do fog node, enquanto a segunda processa dados de postos de recarga e publica no tópico do edge node.
+O código utiliza a biblioteca Paho MQTT para implementar a comunicação entre os nós e os dispositivos IoT. Os dados dos dispositivos são enviados para um broker MQTT, que encaminha os dados para os nós de computação apropriados (fog ou edge) com base em suas capacidades de processamento.
 
-Em seguida, é criado um cliente MQTT, que se conecta ao broker e se inscreve em dois tópicos: "dadoscarros" e "dadospontos". O loop de recebimento de mensagens é iniciado em uma thread separada para que a conexão com o broker seja mantida enquanto a aplicação continua a executar.
+O código define duas funções principais para processar os dados dos dispositivos: process_car_data() e process_posto_data(). A primeira função processa os dados de um carro elétrico e determina em qual nó de computação o carro deve ser processado com base em sua localização e na carga de processamento dos nós. A segunda função processa os dados de um posto de recarga e determina se o posto deve ser processado na borda ou na névoa com base na carga de processamento dos nós.
 
-Após isso, um loop principal é iniciado para gerar e publicar dados aleatórios de carros elétricos e postos de recarga, respectivamente, utilizando funções específicas. Esses dados são gerados aleatoriamente e incluem informações como ID do carro, marca, modelo, porcentagem de bateria, tipo de descarga, ID do posto de recarga, capacidade do posto, tamanho da fila e localização.
+O código também define uma função monitor_load() que monitora a carga de processamento dos nós e ajusta a capacidade dos nós de acordo com a carga para manter um bom desempenho do sistema.
 
-Em resumo, o código simula o envio de dados entre dispositivos IoT através do protocolo MQTT, permitindo o processamento desses dados em diferentes nós (fog e edge) e o gerenciamento da carga de processamento em cada nó.
+O padrão de desenvolvimento utilizado neste código é o de programação concorrente com threads. O código cria uma thread separada para monitorar a carga dos nós e ajustar a capacidade, enquanto outras threads são criadas para processar os dados dos dispositivos.
+
+Em resumo, o código implementa uma solução de IoT para gerenciamento de carregamento de veículos elétricos em uma infraestrutura de fog e edge computing, utilizando a biblioteca Paho MQTT e programação concorrente com threads.
